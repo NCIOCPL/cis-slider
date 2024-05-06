@@ -1,0 +1,30 @@
+{
+	"name": "cis-slider",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"format:check": "prettier \"**/*\" --ignore-unknown",
+		"format:write": "npm run format -- --write",
+		"lint": "eslint . --max-warnings 0 --report-unused-disable-directives",
+		"prepare": "husky"
+	},
+	"engines": {
+		"node": ">=20.0.0 <21.0.0",
+		"npm": ">=10.0.0 <11.0.0"
+	},
+	"devDependencies": {
+		"@eslint/js": "~9.2.0",
+		"eslint": "~8.57.0",
+		"eslint-config-prettier": "~9.1.0",
+		"husky": "~9.0.11",
+		"lint-staged": "~15.2.2",
+		"prettier": "3.2.5",
+		"typescript": "~5.2.2",
+		"typescript-eslint": "~7.8.0",
+		"vite": "~5.2.11"
+	}
+}
