@@ -29,6 +29,11 @@
 	& .usa-icon {
 		float: left;
 		position: initial;
+		pointer-events: none;
+	}
+
+	& span {
+		pointer-events: none;
 	}
 }
 
