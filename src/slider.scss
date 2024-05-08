@@ -14,11 +14,48 @@
 
 @use 'uswds-core' as *;
 
+// Just a note here: The usa-button/nci-icon is not built to be rotated. So we
+// need to override all the default (mobile) styling in order to not make it
+// full width or funky. (Not that rotating it, sticking it to the right, and
+// displaying it slightly off screen is NOT funky already.
 .usa-button--slider-button {
 	position: fixed;
 	top: 40%;
-	right: 30px;
+	right: 38px;
 	transform: rotate(-90deg);
 	transform-origin: right top;
 	width: auto;
+
+	& .usa-icon {
+		float: left;
+		position: initial;
+	}
+}
+
+.cis-slider-contents {
+	&__buttons {
+		@include u-width('full');
+		@include u-display('flex');
+		@include u-flex('column');
+		@include u-flex('justify-center');
+		@include u-flex('align-stretch');
+		gap: units('105');
+
+		@include at-media(mobile-lg) {
+			@include u-width('card-lg');
+			@include u-margin-x('auto');
+		}
+	}
+
+	&__phone {
+		@extend .usa-button--nci-icon;
+		@extend .usa-button--nci-full-width;
+		@include u-text('center');
+		@include u-width('full');
+		@include u-font-weight('bold');
+	}
+
+	&__button-row .usa-button {
+		@include u-width('full');
+	}
 }
