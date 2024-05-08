@@ -1,0 +1,100 @@
+@charset "utf-8";
+
+// These are USWDS setting overrides for different scss entry points. These
+// overrides should default to the NCIDS/USWDS defaults. (or future defaults
+// in the event of a bug or change request)
+// Please name these $override-<theme_setting_name>.
+$override-theme-section-padding-height: 4 !default;
+$override-theme-section-padding-height-mobile: 3 !default;
+
+@use 'uswds-core' with (
+	$theme-image-path: '@nciocpl/ncids-css/uswds-img',
+	$theme-show-notifications: false,
+	$theme-show-compile-warnings: false,
+	// Style all "naked" <a> elements with the correct colors. This overrides
+	// the uswds setting used by uswds-global just for this entry point.
+	$theme-global-link-styles: true,
+	$theme-utility-breakpoints: (
+		'card': false,
+		'card-lg': false,
+		'mobile': false,
+		'mobile-lg': true,
+		'tablet': true,
+		'tablet-lg': true,
+		'desktop': true,
+		'desktop-lg': false,
+		'widescreen': true,
+	),
+	$theme-section-padding-height: $override-theme-section-padding-height,
+	$theme-section-padding-height-mobile: $override-theme-section-padding-height-mobile
+);
+
+@forward 'uswds-global';
+
+@forward 'usa-layout-grid';
+@forward 'nci-no-print'; //print styling
+
+// The specific Component imports. Nothing in this list SHOULD reference
+// NCIDS or USWDS. It should come from ../../lib/components.
+@forward 'usa-skipnav';
+@forward 'usa-banner';
+@forward 'usa-footer';
+
+@forward 'nci-header';
+@forward 'nci-autocomplete';
+
+// This is global typography and body content styling. The following imports
+// are from the uswds-typography package, however we will comment out the
+// ones we do not thing should be global.
+@forward 'usa-content';
+@forward 'usa-dark-background';
+@forward 'usa-display';
+// The intro styling seems silly here as we only use into on articles and
+// blogs posts for the most part.
+//@forward "usa-intro";
+@forward 'usa-link';
+// List is actually already included with footer, however, we include it
+// here in the event it is removed from the footer some day.
+@forward 'usa-list';
+@forward 'usa-paragraph';
+@forward 'usa-prose';
+@forward 'nci-heading';
+
+@forward 'usa-section';
+
+@use 'uswds-core' as *;
+
+#nci-header {
+	.nci-autocomplete {
+		@include u-display('flex');
+		@include u-margin(0);
+		@include u-text('no-wrap');
+		@include u-position('relative');
+		justify-content: center;
+		@include at-media('mobile-lg') {
+			flex-grow: 0;
+			min-width: 350px;
+		}
+
+		@include at-media('desktop') {
+			min-width: 300px;
+		}
+	}
+
+	.listboxWidth {
+		width: calc(100% - 48px);
+		@include at-media('desktop') {
+			width: calc(100% - 75.25px);
+		}
+	}
+}
+
+// There is no way to force the measure to none with utility classes due
+// to the specificity of usa-prose's measure styling. So let's just create
+// a variant here for now. This should be removed when NCIDS#1020 gets
+// implemented.
+.usa-prose--nci-no-measure {
+	p {
+		@include u-measure('none');
+	}
+}
