@@ -1,0 +1,24 @@
+/*
+ * This file is used to define the styles for the CIS slider component. Mostly it will be for
+ * forwarding other partials.
+ * NOTE: This will always be injected onto a page that has NCIDS. So we only need those bits
+ * that are specific to the slider/implementation.
+ */
+@use 'uswds-core' with (
+	$theme-image-path: '@nciocpl/ncids-css/uswds-img',
+	$theme-show-notifications: false,
+	$theme-global-link-styles: true
+);
+
+@forward 'usa-modal';
+
+@use 'uswds-core' as *;
+
+.usa-button--slider-button {
+	position: fixed;
+	top: 40%;
+	right: 30px;
+	transform: rotate(-90deg);
+	transform-origin: right top;
+	width: auto;
+}
