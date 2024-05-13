@@ -37,6 +37,16 @@
 	}
 }
 
+// Hide the open button if the modal is active.
+body:not(.usa-js-modal--active) .usa-button--slider-button {
+	visibility: visible;
+}
+
+// Hide the open button if the modal is active.
+body.usa-js-modal--active .usa-button--slider-button {
+	visibility: hidden;
+}
+
 .cis-slider-contents {
 	&__buttons {
 		@include u-width('full');
@@ -53,11 +63,19 @@
 	}
 
 	&__phone {
+		@extend .usa-button;
 		@extend .usa-button--nci-icon;
 		@extend .usa-button--nci-full-width;
-		@include u-text('center');
-		@include u-width('full');
-		@include u-font-weight('bold');
+		@include u-bg('transparent');
+		@include u-color('ink');
+		@include u-cursor('default');
+
+		&:hover,
+		&:focus,
+		&:active {
+			@include u-bg('transparent');
+			@include u-color('ink');
+		}
 	}
 
 	&__button-row .usa-button {
