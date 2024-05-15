@@ -9,6 +9,12 @@ export default defineConfig({
 	build: {
 		minify: true,
 		cssMinify: true,
+		rollupOptions: {
+			input: {
+				'cis-slider': 'src/main.ts',
+				'index.html': 'index.html',
+			},
+		},
 	},
 	css: {
 		postcss: {
