@@ -1,0 +1,84 @@
+/*
+ * This file is used to define the styles for the CIS slider component. Mostly it will be for
+ * forwarding other partials.
+ * NOTE: This will always be injected onto a page that has NCIDS. So we only need those bits
+ * that are specific to the slider/implementation.
+ */
+@use 'uswds-core' with (
+	$theme-image-path: '@nciocpl/ncids-css/uswds-img',
+	$theme-show-notifications: false,
+	$theme-global-link-styles: true
+);
+
+@forward 'usa-modal';
+
+@use 'uswds-core' as *;
+
+// Just a note here: The usa-button/nci-icon is not built to be rotated. So we
+// need to override all the default (mobile) styling in order to not make it
+// full width or funky. (Not that rotating it, sticking it to the right, and
+// displaying it slightly off screen is NOT funky already.
+.usa-button--slider-button {
+	position: fixed;
+	top: 40%;
+	right: 38px;
+	transform: rotate(-90deg);
+	transform-origin: right top;
+	width: auto;
+
+	& .usa-icon {
+		float: left;
+		position: initial;
+		pointer-events: none;
+	}
+
+	& span {
+		pointer-events: none;
+	}
+}
+
+// Hide the open button if the modal is active.
+body:not(.usa-js-modal--active) .usa-button--slider-button {
+	visibility: visible;
+}
+
+// Hide the open button if the modal is active.
+body.usa-js-modal--active .usa-button--slider-button {
+	visibility: hidden;
+}
+
+.cis-slider-contents {
+	&__buttons {
+		@include u-width('full');
+		@include u-display('flex');
+		@include u-flex('column');
+		@include u-flex('justify-center');
+		@include u-flex('align-stretch');
+		gap: units('105');
+
+		@include at-media(mobile-lg) {
+			@include u-width('card-lg');
+			@include u-margin-x('auto');
+		}
+	}
+
+	&__phone {
+		@extend .usa-button;
+		@extend .usa-button--nci-icon;
+		@extend .usa-button--nci-full-width;
+		@include u-bg('transparent');
+		@include u-color('ink');
+		@include u-cursor('default');
+
+		&:hover,
+		&:focus,
+		&:active {
+			@include u-bg('transparent');
+			@include u-color('ink');
+		}
+	}
+
+	&__button-row .usa-button {
+		@include u-width('full');
+	}
+}
