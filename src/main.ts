@@ -110,7 +110,11 @@ const initComponents = () => {
 	// Inject modal dialog.
 	const parser = new DOMParser();
 	const dialog = parser.parseFromString(content, 'text/html');
-	const modalContents = document.body.appendChild(dialog.body);
+	const wrapDiv = document.createElement('div');
+	for (const child of Array.from(dialog.body.children)) {
+		wrapDiv.appendChild(child);
+	}
+	const modalContents = document.body.appendChild(wrapDiv);
 	const modalCloseBtn = modalContents.querySelector('.usa-modal__close');
 
 	// Setup state tracking for our mutation checking. USWDS does not offer any custom
