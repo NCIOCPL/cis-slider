@@ -139,10 +139,10 @@ jobs:
       - name: Upload artifact to netstorage
         uses: nciocpl/netstorage-upload-action@v1.0.0
         with:
-          hostname: ${{ secrets.ns_hostname }}
-          cp-code: ${{ secrets.ns_cpcode }}
-          key-name: ${{ secrets.ns_keyname }}
-          key: ${{ secrets.ns_key }}
+          hostname: ${{ secrets.launchables_ns_hostname }}
+          cp-code: ${{ secrets.launchables_ns_cpcode }}
+          key-name: ${{ secrets.launchables_ns_keyname }}
+          key: ${{ secrets.launchables_ns_key }}
           index-zip: true
           local-path: ${{ format('{0}.zip', env.BUILD_NAME) }}
           ## Note this action automatically prepends the cpcode to the path.
@@ -150,9 +150,9 @@ jobs:
       - name: Clear Site Cache
         uses: nciocpl/akamai-purge-action@v1.0.2
         with:
-          hostname: ${{ secrets.eg_hostname }}
-          client-token: ${{ secrets.eg_client_token }}
-          client-secret: ${{ secrets.eg_client_secret }}
-          access-token: ${{ secrets.eg_access_token }}
+          hostname: ${{ secrets.launchables_eg_hostname }}
+          client-token: ${{ secrets.launchables_eg_client_token }}
+          client-secret: ${{ secrets.launchables_eg_client_secret }}
+          access-token: ${{ secrets.launchables_eg_access_token }}
           type: 'cpcodes'
-          ref: ${{ format('{0},{1}', secrets.ns_cpcode, secrets.prop_cpcode) }}
+          ref: ${{ format('{0},{1}', secrets.launchables_ns_cpcode, secrets.launchables_prop_cpcode) }}
