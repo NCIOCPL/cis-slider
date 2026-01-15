@@ -7,10 +7,31 @@
  * contact the Cancer Information Service (CIS).
  */
 
+// HTML Content of the modal dialog.
 import content from './slider.html?raw';
+// Styles to inject for the slider button and modal content.
 import css from './slider.scss?inline';
 
-import modal from '@uswds/uswds/js/usa-modal';
+// Import USA Modal component from the NCIDS.
+import { USAModal } from '@nciocpl/ncids-js/usa-modal';
+
+/**
+ * Defines the possible causes for closing a modal.
+ * These values should match the ones defined in the USAModal component.
+ * (Used for Analytics tracking.)
+ */
+enum ModalCloseActions {
+	/** The modal was closed by clicking the X button. */
+	CloseButton = 'close',
+	/** The modal was closed by clicking outside the modal. */
+	OutsideModal = 'outside',
+	/** The modal was closed because the user interacted with one of the buttons. */
+	ClickedButton = 'ButtonClick',
+	/** The modal was closed by pressing the escape key. */
+	EscapeKey = 'escape',
+	/** Neither of the two methods. Probably escape. */
+	Other = 'other',
+}
 
 /**
  * Defines the possible Event-driven Data Layer (EDDL) Event Types.
@@ -54,6 +75,8 @@ declare global {
 	}
 }
 
+// Function to track Other events to the EDDL data layer.
+// (Used for Analytics tracking.)
 const trackOther = (eventName: string, action: string, actionDetails?: string) => {
 	window.NCIDataLayer = window.NCIDataLayer || [];
 
@@ -70,36 +93,15 @@ const trackOther = (eventName: string, action: string, actionDetails?: string) =
 	});
 };
 
-/**
- * Defines the possible causes for closing a modal.
- */
-enum ModalCloseCause {
-	/** The modal was closed by clicking the X button. */
-	XButton = 'XButton',
-	/** The modal was closed by clicking outside the modal. */
-	OutsideModal = 'OutsideModal',
-	/** The modal was closed because the user interacted with one of the buttons. */
-	ClickedButton = 'ButtonClick',
-	/** Neither of the two methods. Probably escape. */
-	Other = 'Other',
-}
-
-// Inject slider styles.
-const sliderStyles = document.createElement('style');
-document.head.appendChild(sliderStyles);
-sliderStyles.appendChild(document.createTextNode(css));
-
-// Modal initialization.
-const initComponents = () => {
-	// Inject button
+// Creates and injects the button element into the page
+// that is used to open the "Questions?" cis slider modal.
+const createButtonElement = (): void => {
 	const buttonText = document.createElement('span');
 	buttonText.textContent = 'Questions?';
 
 	const button = document.createElement('button');
 	//button.href = '#cis-slider-modal';
 	button.classList.add('usa-button', 'usa-button--slider-button', 'usa-button--nci-icon');
-	button.setAttribute('data-modal-open', '');
-	button.setAttribute('aria-controls', 'cis-slider-modal');
 
 	button.appendChild(buttonText);
 	button.addEventListener('click', () => {
@@ -107,26 +109,60 @@ const initComponents = () => {
 	});
 	document.body.appendChild(button);
 
-	// Inject modal dialog.
+	// Track display of the button.
+	trackOther('Display', 'Display');
+};
+
+// Create USA Modal (Empty for now, content will be injected later).
+const createEmptyModal = (): USAModal => {
+	const modal = USAModal.createConfig({
+		id: 'cis-slider-modal',
+		forced: false,
+		modifier: '',
+	});
+	return modal;
+};
+
+// Injects the content into the modal dialog.
+const injectModalContent = (modal: USAModal): void => {
+	// Create modal content from parsed HTML.
 	const parser = new DOMParser();
 	const dialog = parser.parseFromString(content, 'text/html');
-	const wrapDiv = document.createElement('div');
-	for (const child of Array.from(dialog.body.children)) {
-		wrapDiv.appendChild(child);
-	}
-	const modalContents = document.body.appendChild(wrapDiv);
-	const modalCloseBtn = modalContents.querySelector('.usa-modal__close');
+	modal.updateDialog({
+		title: 'Have Questions?',
+		content: dialog.body.children[0] as HTMLElement,
+	});
+};
 
-	// Setup state tracking for our mutation checking. USWDS does not offer any custom
-	// events to know if the modal was closed, so we must make a mutation observer to
-	// watch for the modal to hide/show.
-	const modalState = {
-		isDisplaying: false,
-		closeCause: ModalCloseCause.Other,
-	};
+// Adds event handlers to the modal for analytics tracking.
+// Analytics tracking listens for CustomEvents from the modal instance.
+const addModalCloseEventHandlers = () => {
+	// Analytics tracking which listens for modal close event.
+	document.addEventListener('usa-modal:close', (e) => {
+		const eventDetail = (e as CustomEvent).detail;
+		switch (eventDetail.closeAction) {
+			case ModalCloseActions.CloseButton:
+				trackOther('ModalDismissClick', 'Modal Dismiss', 'X Button');
+				break;
+			case ModalCloseActions.OutsideModal:
+				trackOther('ModalDismissClick', 'Modal Dismiss', 'Outside Modal');
+				break;
+			case ModalCloseActions.EscapeKey:
+				trackOther('ModalDismissClick', 'Modal Dismiss', 'Escape Key');
+				break;
+			default:
+				break;
+		}
+	});
+};
 
-	// Analytics tracking for chat and email buttons.
-	const buttons = Array.from(modalContents.querySelectorAll('.cis-slider-contents__button-row a')) as HTMLElement[];
+// Add the Analytics event handlers to the modal and its elements.
+// This is called after the modal is opened to ensure the content is present.
+const addModalContentEventHandlers = (modalInstance: USAModal) => {
+	const modalElement = modalInstance.getModalElement() as HTMLElement;
+	// Analytics tracking for chat and email buttons within the modal content.
+	const buttons = Array.from(modalElement.querySelectorAll('.cis-slider-contents__button-row a')) as HTMLElement[];
+	// For each button in the modal, add click listener for analytics tracking.
 	for (const link of buttons) {
 		link.addEventListener('click', (e) => {
 			trackOther('ModalLinkClick', 'Modal Link Click', link.dataset.cisAnalyticsBtn);
@@ -134,101 +170,53 @@ const initComponents = () => {
 				window.open('https://livehelp.cancer.gov/app/chat/chat_launch', 'LiveHelp', 'scrollbars=yes,resizable=yes,menubar=yes,toolbar=yes,location=yes,width=650,height=600');
 				e.preventDefault();
 			}
-
-			// We should not close the modal.
-			// First we need to setup some state so that the modal close does
-			// not fire off analytics events.
-			modalState.closeCause = ModalCloseCause.ClickedButton;
-
-			// Now we close the modal. IDK what is up with the typing. They seem
-			// to not require an Event, they require a Keyboard event, yet, have
-			// comments that the events will not be keyboard events. There is no
-			// safety in checking if the event is not null.
-			// @ts-expect-error: Typing seems to be off AND they assume it is maybe the result of an event.
-			modal.toggleModal({ target: false, type: 'nothing' });
+			// Close the modal after handling button interaction.
+			modalInstance.handleModalClose(e);
 		});
 	}
 
 	// Long press tracking for phone number - ish. So let's keep track if the context menu
 	// for the text is opened.
 	//https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event
-	modalContents.querySelector('.cis-slider-contents__phone span')?.addEventListener('contextmenu', () => {
+	modalElement.querySelector('.cis-slider-contents__phone span')?.addEventListener('contextmenu', () => {
 		trackOther('ModalLinkClick', 'Modal Link Click', 'Phone');
 	});
 
 	// On IOS phone number text is turned into a tel: link for free. So let's listen for
 	// a click of a link.
-	modalContents.querySelector('.cis-slider-contents__phone span')?.addEventListener('click', (event) => {
+	modalElement.querySelector('.cis-slider-contents__phone span')?.addEventListener('click', (event) => {
 		if (event.target instanceof HTMLAnchorElement) {
 			trackOther('ModalLinkClick', 'Modal Link Click', 'Phone');
 		}
 	});
+};
 
-	// This tracks click of the modal close button as we can be 100 sure it is the
-	// cause of the modal to close. The mutation observer below will actually handle
-	// the analytics tracking.
-	modalCloseBtn?.addEventListener('click', () => {
-		modalState.closeCause = ModalCloseCause.XButton;
+// Inject slider styles.
+const sliderStyles = document.createElement('style');
+document.head.appendChild(sliderStyles);
+sliderStyles.appendChild(document.createTextNode(css));
+
+// Initialize function to set up the CIS Questions slider button
+// and accompanying modal.
+const initCisSliderWithModal = () => {
+	// Create "Questions?" button and the modal it opens.
+	createButtonElement();
+	const modal = createEmptyModal();
+	injectModalContent(modal);
+
+	// Add event handler to open the modal when the button is clicked.
+	const questionButton = document.querySelector('.usa-button--slider-button') as HTMLElement;
+	questionButton.addEventListener('click', (e) => {
+		modal.handleModalOpen(e);
 	});
 
-	// Turn on the USWDS modal.
-	const target = document.body;
-	modal.on(target);
-
-	// The modal code actually moves the ID of the modal to a wrapper div. So we
-	// need to go get the element for this to add the mutation observer.
-	const modalWrapper = document.getElementById('cis-slider-modal');
-
-	// The modal overlay that covers the page can be clicked on to dismiss. The overlay
-	// is a child of the overall modal wrapper. So we are adding a clickListener.
-	modalWrapper?.querySelector('.usa-modal-overlay')?.addEventListener(
-		'click',
-		(event) => {
-			// This can fire if the X button is clicked because that sits over the modal.
-			if (event.currentTarget === event.target) {
-				modalState.closeCause = ModalCloseCause.OutsideModal;
-			}
-		},
-		{ capture: true }
-	);
-
-	const observer = new MutationObserver((mutations) => {
-		for (const mutation of mutations) {
-			if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-				const target = mutation.target as HTMLElement;
-				const isVisible = target.classList.contains('is-visible');
-
-				if (modalState.isDisplaying !== isVisible) {
-					if (isVisible) {
-						// No tracking on display.
-						modalState.isDisplaying = true;
-					} else {
-						// We need to not raise an analytics event if the user clicks on a button,
-						// which closes the modal.
-						if (modalState.closeCause !== ModalCloseCause.ClickedButton) {
-							trackOther('ModalDismissClick', 'Dismiss Click', modalState.closeCause === ModalCloseCause.XButton ? 'X button' : modalState.closeCause === ModalCloseCause.OutsideModal ? 'Outside Modal' : 'Other');
-						}
-						modalState.closeCause = ModalCloseCause.Other;
-						modalState.isDisplaying = false;
-					}
-				}
-			}
-		}
-	});
-
-	if (modalWrapper) {
-		observer.observe(modalWrapper, {
-			attributes: true,
-			attributeFilter: ['class'],
-		});
-	}
-
-	// Track analytics for the display of the button.
-	trackOther('Display', 'Display');
+	// Add analytics event handlers.
+	addModalCloseEventHandlers();
+	addModalContentEventHandlers(modal);
 };
 
 if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', initComponents, { once: true });
+	document.addEventListener('DOMContentLoaded', initCisSliderWithModal, { once: true });
 } else {
-	initComponents();
+	initCisSliderWithModal();
 }
